@@ -1,0 +1,9 @@
+[project]
+name = "fizzy-mcp"
+version = "0.1.0"
+description = "MCP server for Fizzy Kanban"
+dependencies = [
+    "fastmcp",
+    "httpx",
+]
+requires-python = ">=3.10"

@@ -1,0 +1,11 @@
+[tools]
+python = "3.14"
+
+[env]
+_.python.venv = { path = ".venv", create = true }
+_.file = { path = ".env", redact = true }
+
+[tasks.run]
+description = "Run the Fizzy MCP server"
+dir = "{{cwd}}"
+run = "python server.py"
