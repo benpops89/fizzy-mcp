@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 from typing import Any, Dict, List, Optional
@@ -35,6 +36,7 @@ async def make_request(
     endpoint: str,
     params: Optional[Dict[str, Any]] = None,
     json_data: Optional[Dict[str, Any]] = None,
+    client: Optional[httpx.AsyncClient] = None,
 ) -> Any:
     """Make a request to the Fizzy API."""
     if not API_BASE_URL:
@@ -47,7 +49,12 @@ async def make_request(
     # Debug print to stderr (visible in MCP logs)
     print(f"Requesting: {url}", file=sys.stderr)
 
-    async with httpx.AsyncClient() as client:
+    should_close = False
+    if client is None:
+        client = httpx.AsyncClient()
+        should_close = True
+
+    try:
         response = await client.request(
             method, url, headers=headers, params=params, json=json_data
         )
@@ -76,6 +83,10 @@ async def make_request(
                 }
 
         return response.json()
+
+    finally:
+        if should_close:
+            await client.aclose()
 
 
 @mcp.tool()
@@ -183,17 +194,22 @@ async def toggle_tags(
         tags: List of tags to toggle
     """
     slug = clean_slug(account_slug)
-    toggled_tags = []
+    
+    async with httpx.AsyncClient() as client:
+        tasks = []
+        for tag in tags:
+            tasks.append(
+                make_request(
+                    "POST",
+                    f"{slug}/cards/{card_number}/taggings",
+                    json_data={"tag_title": tag},
+                    client=client
+                )
+            )
+        
+        await asyncio.gather(*tasks)
 
-    for tag in tags:
-        await make_request(
-            "POST",
-            f"{slug}/cards/{card_number}/taggings",
-            json_data={"tag_title": tag},
-        )
-        toggled_tags.append(tag)
-
-    return {"status": "success", "toggled_tags": toggled_tags}
+    return {"status": "success", "toggled_tags": tags}
 
 
 @mcp.tool()
@@ -210,18 +226,21 @@ async def add_steps(
     """
     slug = clean_slug(account_slug)
 
-    created_steps = []
+    async with httpx.AsyncClient() as client:
+        tasks = []
+        for step_content in steps:
+            tasks.append(
+                make_request(
+                    "POST",
+                    f"{slug}/cards/{card_number}/steps",
+                    json_data={"step": {"content": step_content}},
+                    client=client
+                )
+            )
+        
+        results = await asyncio.gather(*tasks)
 
-    for step_content in steps:
-        # Body: { "step": { "content": "..." } }
-        result = await make_request(
-            "POST",
-            f"{slug}/cards/{card_number}/steps",
-            json_data={"step": {"content": step_content}},
-        )
-        created_steps.append(result)
-
-    return {"status": "success", "created_steps": created_steps}
+    return {"status": "success", "created_steps": results}
 
 
 if __name__ == "__main__":
