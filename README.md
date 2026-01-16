@@ -1,13 +1,13 @@
 # Fizzy MCP Server
 
-This is a Model Context Protocol (MCP) server for the [Fizzy Kanban app](https://github.com/basecamp/fizzy). It allows LLMs to interact with Fizzy to list boards, view cards, and create new tasks.
+This is a Model Context Protocol (MCP) server for the [Fizzy Kanban app](https://github.com/basecamp/fizzy). It allows LLMs to interact with Fizzy to manage boards, cards, tags, and steps.
 
 ## Features
 
-- **Get Identity**: View current user and accessible accounts.
-- **List Boards**: View all boards for an account.
-- **List Cards**: View cards (tasks) in an account or specific board.
-- **Create Card**: Create new tasks in a specific board.
+- **Identity**: View current user and accessible accounts.
+- **Boards**: List all boards for an account.
+- **Cards**: List, view, and create cards (tasks).
+- **Details**: Manage tags and steps (todo items) on cards.
 
 ## Installation & Usage with uv
 
@@ -26,12 +26,10 @@ This project is designed to be used with [uv](https://github.com/astral-sh/uv), 
 
 ## Configuration
 
-You must set the `FIZZY_API_TOKEN` environment variable. If you are self-hosting Fizzy, you can also set `FIZZY_API_BASE_URL`.
+You must set the `FIZZY_API_TOKEN` and `FIZZY_API_BASE_URL` environment variables.
 
 ```bash
 export FIZZY_API_TOKEN="your_access_token_here"
-
-# Optional: For self-hosted instances (defaults to https://app.fizzy.do)
 export FIZZY_API_BASE_URL="https://fizzy.yourdomain.com"
 ```
 
@@ -40,10 +38,42 @@ To generate a token:
 2. Click on "Personal access tokens".
 3. Click "Generate new access token".
 
-## Tools
+## Available Tools
 
-- `get_user_identity()`: Returns user identity and accounts.
-- `list_boards(account_slug)`: Returns boards for an account.
-- `list_cards(account_slug, board_id=None, limit=50)`: Returns cards.
-- `get_card(account_slug, card_number)`: Returns a specific card.
-- `create_card(account_slug, board_id, title, description=None, status='published')`: Creates a card.
+- **`get_user_identity`**
+  Get the current user's identity and accessible accounts.
+
+- **`list_boards`**
+  List all boards for a specific account.
+  - `account_slug`: The slug of the account.
+
+- **`list_cards`**
+  List cards for an account, optionally filtered by board.
+  - `account_slug`: The slug of the account.
+  - `board_id`: (Optional) Filter by specific board ID.
+  - `limit`: (Optional) Max cards to return (default 50).
+
+- **`get_card`**
+  Get details for a specific card.
+  - `account_slug`: The slug of the account.
+  - `card_number`: The unique number of the card.
+
+- **`create_card`**
+  Create a new card in a specific board.
+  - `account_slug`: The slug of the account.
+  - `board_id`: The ID of the board.
+  - `title`: Card title.
+  - `description`: (Optional) Rich text description.
+  - `status`: (Optional) 'published' (default) or 'drafted'.
+
+- **`toggle_tags`**
+  Toggle tags on a card (add if missing, remove if present).
+  - `account_slug`: The slug of the account.
+  - `card_number`: The card number.
+  - `tags`: List of tag strings.
+
+- **`add_steps`**
+  Add todo steps to a card.
+  - `account_slug`: The slug of the account.
+  - `card_number`: The card number.
+  - `steps`: List of step content strings.
