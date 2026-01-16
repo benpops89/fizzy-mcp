@@ -33,12 +33,17 @@ def clean_slug(slug: str) -> str:
 async def make_request(
     method: str,
     endpoint: str,
-    params: Optional[Dict] = None,
-    json_data: Optional[Dict] = None,
+    params: Optional[Dict[str, Any]] = None,
+    json_data: Optional[Dict[str, Any]] = None,
 ) -> Any:
     """Make a request to the Fizzy API."""
+    if not API_BASE_URL:
+        raise ValueError("FIZZY_API_BASE_URL environment variable is not set")
+
     headers = get_headers()
-    url = f"{API_BASE_URL}/{endpoint.lstrip('/')}"
+    # Ensure correct slash handling
+    url = f"{API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}"
+
     # Debug print to stderr (visible in MCP logs)
     print(f"Requesting: {url}", file=sys.stderr)
 
@@ -53,7 +58,22 @@ async def make_request(
         response.raise_for_status()
 
         if response.status_code == 204:
-            return None
+            return {"status": "success", "code": 204}
+
+        if response.status_code == 201:
+            content = response.content.strip()
+            if not content:
+                return {
+                    "status": "created",
+                    "location": response.headers.get("Location"),
+                }
+            try:
+                return response.json()
+            except Exception:
+                return {
+                    "status": "created",
+                    "location": response.headers.get("Location"),
+                }
 
         return response.json()
 
@@ -98,8 +118,6 @@ async def list_cards(
 
     # Note: API does not strictly specify a 'limit' param in docs,
     # but uses pagination. We'll just return the first page for now.
-    # If the API supported per_page, we'd use it.
-
     return await make_request("GET", f"{slug}/cards", params=params)
 
 
@@ -141,21 +159,69 @@ async def create_card(
     if description:
         payload["card"]["description"] = description
 
-    # The API returns 201 Created and a Location header, but often body too?
-    # Docs say "Returns 201 Created with a Location header pointing to the new card."
-    # Let's assume it might return the card body or we might need to fetch it.
-    # Our make_request helper returns JSON if available.
-
-    # Note: make_request raises on non-2xx.
-
     endpoint = f"{slug}/boards/{board_id}/cards"
     result = await make_request("POST", endpoint, json_data=payload)
 
-    # If result is empty (some APIs just return headers), we might want to return a success message.
+    # Handle cases where the API returns headers only or empty body
     if not result:
         return {"status": "created", "message": "Card created successfully"}
 
     return result
+
+
+@mcp.tool()
+async def toggle_tags(
+    account_slug: str, card_number: int, tags: List[str]
+) -> Dict[str, Any]:
+    """
+    Toggle tags on a card.
+    The API toggles tags: if present it removes, if absent it adds.
+
+    Args:
+        account_slug: The slug of the account
+        card_number: The number of the card
+        tags: List of tags to toggle
+    """
+    slug = clean_slug(account_slug)
+    toggled_tags = []
+
+    for tag in tags:
+        await make_request(
+            "POST",
+            f"{slug}/cards/{card_number}/taggings",
+            json_data={"tag_title": tag},
+        )
+        toggled_tags.append(tag)
+
+    return {"status": "success", "toggled_tags": toggled_tags}
+
+
+@mcp.tool()
+async def add_steps(
+    account_slug: str, card_number: int, steps: List[str]
+) -> Dict[str, Any]:
+    """
+    Add steps (todo items) to a card.
+
+    Args:
+        account_slug: The slug of the account
+        card_number: The number of the card
+        steps: List of step contents to add
+    """
+    slug = clean_slug(account_slug)
+
+    created_steps = []
+
+    for step_content in steps:
+        # Body: { "step": { "content": "..." } }
+        result = await make_request(
+            "POST",
+            f"{slug}/cards/{card_number}/steps",
+            json_data={"step": {"content": step_content}},
+        )
+        created_steps.append(result)
+
+    return {"status": "success", "created_steps": created_steps}
 
 
 if __name__ == "__main__":
