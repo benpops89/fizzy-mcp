@@ -111,6 +111,20 @@ async def list_boards(account_slug: str) -> List[Dict[str, Any]]:
 
 
 @mcp.tool()
+async def delete_board(account_slug: str, board_id: str) -> Dict[str, Any]:
+    """
+    Delete a specific board.
+
+    Args:
+        account_slug: The slug of the account
+        board_id: The ID of the board to delete
+    """
+    slug = clean_slug(account_slug)
+    endpoint = f"{slug}/boards/{board_id}"
+    return await make_request("DELETE", endpoint)
+
+
+@mcp.tool()
 async def list_cards(
     account_slug: str, board_id: Optional[str] = None, limit: int = 50
 ) -> List[Dict[str, Any]]:
