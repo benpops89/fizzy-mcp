@@ -5,8 +5,8 @@ This is a Model Context Protocol (MCP) server for the [Fizzy Kanban app](https:/
 ## Features
 
 - **Identity**: View current user and accessible accounts.
-- **Boards**: List all boards for an account.
-- **Cards**: List, view, and create cards (tasks).
+- **Boards**: Create, list, and delete boards.
+- **Cards**: List, view, create, update, and delete cards (tasks).
 - **Details**: Manage tags and steps (todo items) on cards.
 
 ## Installation & Usage with uv
@@ -47,6 +47,16 @@ To generate a token:
   List all boards for a specific account.
   - `account_slug`: The slug of the account.
 
+- **`create_board`**
+  Create a new board in an account.
+  - `account_slug`: The slug of the account.
+  - `name`: The name of the new board.
+
+- **`delete_board`**
+  Delete a specific board.
+  - `account_slug`: The slug of the account.
+  - `board_id`: The ID of the board to delete.
+
 - **`list_cards`**
   List cards for an account, optionally filtered by board.
   - `account_slug`: The slug of the account.
@@ -65,6 +75,19 @@ To generate a token:
   - `title`: Card title.
   - `description`: (Optional) Rich text description.
   - `status`: (Optional) 'published' (default) or 'drafted'.
+
+- **`update_card`**
+  Update a card's details.
+  - `account_slug`: The slug of the account.
+  - `card_number`: The card number.
+  - `title`: (Optional) New title.
+  - `description`: (Optional) New description.
+  - `status`: (Optional) New status.
+
+- **`delete_card`**
+  Archive (delete) a specific card.
+  - `account_slug`: The slug of the account.
+  - `card_number`: The card number.
 
 - **`toggle_tags`**
   Toggle tags on a card (add if missing, remove if present).
