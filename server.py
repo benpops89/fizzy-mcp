@@ -209,6 +209,43 @@ async def create_card(
 
 
 @mcp.tool()
+async def update_card(
+    account_slug: str,
+    card_number: int,
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+    status: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Update a card's details.
+
+    Args:
+        account_slug: The slug of the account
+        card_number: The number of the card to update
+        title: Optional new title
+        description: Optional new description
+        status: Optional new status
+    """
+    slug = clean_slug(account_slug)
+    
+    card_data = {}
+    if title:
+        card_data["title"] = title
+    if description:
+        card_data["description"] = description
+    if status:
+        card_data["status"] = status
+        
+    if not card_data:
+        raise ValueError("At least one field (title, description, status) must be provided to update")
+
+    payload = {"card": card_data}
+    endpoint = f"{slug}/cards/{card_number}"
+    
+    return await make_request("PUT", endpoint, json_data=payload)
+
+
+@mcp.tool()
 async def delete_card(account_slug: str, card_number: int) -> Dict[str, Any]:
     """
     Archive (delete) a specific card.
