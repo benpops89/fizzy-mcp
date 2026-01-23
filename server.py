@@ -195,6 +195,20 @@ async def create_card(
 
 
 @mcp.tool()
+async def delete_card(account_slug: str, card_number: int) -> Dict[str, Any]:
+    """
+    Archive (delete) a specific card.
+
+    Args:
+        account_slug: The slug of the account
+        card_number: The number of the card to archive
+    """
+    slug = clean_slug(account_slug)
+    endpoint = f"{slug}/cards/{card_number}"
+    return await make_request("DELETE", endpoint)
+
+
+@mcp.tool()
 async def toggle_tags(
     account_slug: str, card_number: int, tags: List[str]
 ) -> Dict[str, Any]:
