@@ -111,6 +111,20 @@ async def list_boards(account_slug: str) -> List[Dict[str, Any]]:
 
 
 @mcp.tool()
+async def create_board(account_slug: str, name: str) -> Dict[str, Any]:
+    """
+    Create a new board in an account.
+
+    Args:
+        account_slug: The slug of the account
+        name: The name of the new board
+    """
+    slug = clean_slug(account_slug)
+    payload = {"board": {"name": name}}
+    return await make_request("POST", f"{slug}/boards", json_data=payload)
+
+
+@mcp.tool()
 async def delete_board(account_slug: str, board_id: str) -> Dict[str, Any]:
     """
     Delete a specific board.
