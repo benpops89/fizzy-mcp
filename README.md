@@ -1,3 +1,12 @@
+<p align="center">
+  <img src="assets/fizzy-mcp.png" alt="fizzy-mcp logo" width="300" />
+</p>
+
+<p align="center">
+  <strong>⚡ Fast MCP server for the Fizzy Kanban app</strong>
+</p>
+
+---
 # Fizzy MCP Server
 
 This is a Model Context Protocol (MCP) server for the [Fizzy Kanban app](https://github.com/basecamp/fizzy). It allows LLMs to interact with Fizzy to manage boards, cards, tags, and steps.
