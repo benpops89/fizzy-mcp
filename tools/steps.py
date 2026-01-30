@@ -2,7 +2,7 @@ import asyncio
 from typing import Any, Dict, List
 
 import httpx
-from api import clean_slug, make_request
+from api import clean_slug, create_client, make_request
 from mcp_instance import mcp
 
 
@@ -20,7 +20,7 @@ async def add_steps(
     """
     slug = clean_slug(account_slug)
 
-    async with httpx.AsyncClient() as client:
+    async with create_client() as client:
         tasks = []
         for step_content in steps:
             tasks.append(
@@ -35,3 +35,20 @@ async def add_steps(
         results = await asyncio.gather(*tasks)
 
     return {"status": "success", "created_steps": results}
+
+
+@mcp.tool()
+async def delete_step(
+    account_slug: str, card_number: int, step_id: int
+) -> Dict[str, Any]:
+    """
+    Delete a specific step.
+
+    Args:
+        account_slug: The slug of the account
+        card_number: The number of the card
+        step_id: The ID of the step to delete
+    """
+    slug = clean_slug(account_slug)
+    endpoint = f"{slug}/cards/{card_number}/steps/{step_id}"
+    return await make_request("DELETE", endpoint)

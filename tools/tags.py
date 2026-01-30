@@ -2,7 +2,7 @@ import asyncio
 from typing import Any, Dict, List
 
 import httpx
-from api import clean_slug, make_request
+from api import clean_slug, create_client, make_request
 from mcp_instance import mcp
 
 
@@ -21,7 +21,7 @@ async def toggle_tags(
     """
     slug = clean_slug(account_slug)
 
-    async with httpx.AsyncClient() as client:
+    async with create_client() as client:
         tasks = []
         for tag in tags:
             tasks.append(

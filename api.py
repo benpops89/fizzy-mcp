@@ -7,6 +7,15 @@ import httpx
 # Constants
 API_BASE_URL = os.environ.get("FIZZY_API_BASE_URL")
 API_TOKEN = os.environ.get("FIZZY_API_TOKEN")
+FORCE_IPV4 = os.environ.get("FIZZY_FORCE_IPV4", "").lower() == "true"
+
+
+def create_client() -> httpx.AsyncClient:
+    """Create an AsyncClient with optional IPv4 forcing."""
+    if FORCE_IPV4:
+        transport = httpx.AsyncHTTPTransport(local_address="0.0.0.0")
+        return httpx.AsyncClient(transport=transport)
+    return httpx.AsyncClient()
 
 
 def get_headers() -> Dict[str, str]:
@@ -46,7 +55,7 @@ async def make_request(
 
     should_close = False
     if client is None:
-        client = httpx.AsyncClient()
+        client = create_client()
         should_close = True
 
     try:
